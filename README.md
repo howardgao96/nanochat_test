@@ -1,5 +1,14 @@
 该仓库基于[nanochat](https://github.com/karpathy/nanochat)构建。
 
+该项目主要用于个人学习使用，会轻微调整代码结果，并添加的详细的中文注释。
+
+* [x] nanochat系列(1) -- 初体验
+* [x] nanochat系列(2) -- 前端页面
+* [x] nanochat系列(3) -- 命令行终端
+* [ ] nanochat系列(4) -- 后端服务
+* [ ] nanochat系列(5) -- 推理引擎
+* [ ] TBD
+
 
 ```mermaid
 graph TD
