@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 视口设置，确保在移动设备上正确显示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>NanoChat</title>
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <style>
+        /* 根元素设置，使用浅色主题 */
+        :root {
+            color-scheme: light;
+        }
+
+        /* 所有元素使用边框盒模型 */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* 页面主体样式 */
+        body {
+            font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: #ffffff;
+            color: #111827;
+            min-height: 100dvh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部标题栏样式 */
+        .header {
+            background-color: #ffffff;
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* 标题栏左侧布局 */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* 标题栏Logo样式 */
+        .header-logo {
+            height: 32px;
+            width: auto;
+        }
+
+        /* 标题文本样式 */
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            color: #111827;
+        }
+
+        /* 新对话按钮样式 */
+        .new-conversation-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background-color: #ffffff;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        /* 新对话按钮悬停效果 */
+        .new-conversation-btn:hover {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        /* 聊天内容容器样式 */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #ffffff;
+        }
+
+        /* 聊天内容包装器样式 */
+        .chat-wrapper {
+            max-width: 48rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* 消息样式 */
+        .message {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 0.5rem;
+            color: #0d0d0d;
+        }
+
+        /* 助手消息左对齐 */
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        /* 用户消息右对齐 */
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        /* 消息内容样式 */
+        .message-content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            max-width: 100%;
+        }
+
+        /* 助手消息内容样式 */
+        .message.assistant .message-content {
+            background: transparent;
+            border: none;
+            padding: 0.25rem 0;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            margin-left: -0.5rem;
+            transition: background-color 0.2s ease;
+        }
+
+        /* 助手消息悬停效果 */
+        .message.assistant .message-content:hover {
+            background-color: #f9fafb;
+        }
+
+        /* 用户消息样式 */
+        .message.user .message-content {
+            background-color: #f3f4f6;
+            border-radius: 1.25rem;
+            padding: 0.8rem 1rem;
+            max-width: 65%;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        /* 用户消息悬停效果 */
+        .message.user .message-content:hover {
+            background-color: #e5e7eb;
+        }
+
+        /* 控制台消息样式（用于显示命令输出） */
+        .message.console .message-content {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+            font-size: 0.875rem;
+            background-color: #fafafa;
+            padding: 0.75rem 1rem;
+            color: #374151;
+            max-width: 80%;
+        }
+
+        /* 输入区域容器样式 */
+        .input-container {
+            background-color: #ffffff;
+            padding: 1rem;
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom))
+        }
+
+        /* 输入区域包装器样式 */
+        .input-wrapper {
+            max-width: 48rem;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        /* 聊天输入框样式 */
+        .chat-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            background-color: #ffffff;
+            color: #111827;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            min-height: 54px;
+            max-height: 200px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* 输入框占位符样式 */
+        .chat-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* 输入框聚焦样式 */
+        .chat-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* 发送按钮样式 */
+        .send-button {
+            flex-shrink: 0;
+            padding: 0;
+            width: 54px;
+            height: 54px;
+            border: 1px solid #111827;
+            border-radius: 0.75rem;
+            background-color: #111827;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* 发送按钮悬停效果 */
+        .send-button:hover:not(:disabled) {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        /* 发送按钮禁用状态 */
+        .send-button:disabled {
+            cursor: not-allowed;
+            border-color: #d1d5db;
+            background-color: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        /* 打字指示器样式 */
+        .typing-indicator {
+            display: inline-block;
+            color: #6b7280;
+            letter-spacing: 0.15em;
+        }
+
+        /* 打字指示器动画 */
+        .typing-indicator::after {
+            content: '···';
+            animation: typing 1.4s infinite;
+        }
+
+        /* 打字动画关键帧 */
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.2; }
+            30% { opacity: 1; }
+        }
+
+        /* 错误消息样式 */
+        .error-message {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <div class="header">
+        <div class="header-left">
+            <!-- 新对话按钮，支持Ctrl+Shift+N快捷键 -->
+            <button class="new-conversation-btn" onclick="newConversation()" title="New Conversation (Ctrl+Shift+N)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+            </button>
+            <h1>nanochat</h1>
+        </div>
+    </div>
+
+    <!-- 聊天内容显示区域 -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-wrapper" id="chatWrapper">
+            <!-- 消息将被动态添加到这里 -->
+        </div>
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="input-container">
+        <div class="input-wrapper">
+            <textarea
+                id="chatInput"
+                class="chat-input"
+                placeholder="Ask anything"
+                rows="1"
+                onkeydown="handleKeyDown(event)"
+            ></textarea>
+            <!-- 发送消息按钮 -->
+            <button id="sendButton" class="send-button" onclick="sendMessage()" disabled>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 2L11 13"></path>
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_URL = '';
+        // 获取DOM元素引用
+        const chatContainer = document.getElementById('chatContainer');
+        const chatWrapper = document.getElementById('chatWrapper');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // 聊天状态变量
+        let messages = [];              // 存储聊天历史
+        let isGenerating = false;       // 是否正在生成回复
+        let currentTemperature = 0.8;   // 当前温度参数（控制随机性）
+        let currentTopK = 50;           // 当前Top-K参数（控制词汇选择范围）
+
+        // 监听输入框内容变化，自动调整高度并控制发送按钮状态
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+            sendButton.disabled = !this.value.trim() || isGenerating;
+        });
+
+        /**
+         * 处理键盘事件
+         * @param {KeyboardEvent} event - 键盘事件对象
+         */
+        function handleKeyDown(event) {
+            // Enter键发送消息（不包括Shift+Enter）
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 全局键盘事件监听器
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+Shift+N创建新对话
+            if (event.ctrlKey && event.shiftKey && event.key === 'N') {
+                event.preventDefault();
+                if (!isGenerating) {
+                    newConversation();
+                }
+            }
+        });
+
+        /**
+         * 创建新对话
+         */
+        function newConversation() {
+            messages = [];
+            chatWrapper.innerHTML = '';
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            sendButton.disabled = false;
+            isGenerating = false;
+            chatInput.focus();
+        }
+
+        /**
+         * 添加消息到聊天界面
+         * @param {string} role - 消息发送者角色 ('user', 'assistant', 'console')
+         * @param {string} content - 消息内容
+         * @param {number|null} messageIndex - 消息在历史中的索引
+         * @returns {HTMLElement} 消息内容元素
+         */
+        function addMessage(role, content, messageIndex = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            // 为用户消息添加点击处理，支持编辑并重新开始
+            if (role === 'user' && messageIndex !== null) {
+                contentDiv.setAttribute('data-message-index', messageIndex);
+                contentDiv.setAttribute('title', '点击编辑并从这里重新开始');
+                contentDiv.addEventListener('click', function() {
+                    if (!isGenerating) {
+                        editMessage(messageIndex);
+                    }
+                });
+            }
+
+            // 为助手消息添加点击处理，支持重新生成
+            if (role === 'assistant' && messageIndex !== null) {
+                contentDiv.setAttribute('data-message-index', messageIndex);
+                contentDiv.setAttribute('title', '点击重新生成此回复');
+                contentDiv.addEventListener('click', function() {
+                    if (!isGenerating) {
+                        regenerateMessage(messageIndex);
+                    }
+                });
+            }
+
+            messageDiv.appendChild(contentDiv);
+            chatWrapper.appendChild(messageDiv);
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return contentDiv;
+        }
+
+        /**
+         * 编辑消息（用于重新开始对话）
+         * @param {number} messageIndex - 要编辑的消息索引
+         */
+        function editMessage(messageIndex) {
+            // 检查消息索引有效性
+            if (messageIndex < 0 || messageIndex >= messages.length) return;
+
+            const messageToEdit = messages[messageIndex];
+            if (messageToEdit.role !== 'user') return;
+
+            // 将消息内容复制到输入框
+            chatInput.value = messageToEdit.content;
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 200) + 'px';
+
+            // 从消息数组中移除此消息及其后续所有消息
+            messages = messages.slice(0, messageIndex);
+
+            // 从DOM中移除对应的消息元素
+            const allMessages = chatWrapper.querySelectorAll('.message');
+            for (let i = messageIndex; i < allMessages.length; i++) {
+                allMessages[i].remove();
+            }
+
+            // 启用发送按钮并聚焦输入框
+            sendButton.disabled = false;
+            chatInput.focus();
+        }
+
+        /**
+         * 生成助手回复
+         */
+        async function generateAssistantResponse() {
+            isGenerating = true;
+            sendButton.disabled = true;
+
+            // 显示打字指示器
+            const assistantContent = addMessage('assistant', '');
+            assistantContent.innerHTML = '<span class="typing-indicator"></span>';
+
+            try {
+                // 向后端API发送聊天请求
+                const response = await fetch(`${API_URL}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        temperature: currentTemperature,
+                        top_k: currentTopK,
+                        max_tokens: 512
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // 处理流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                assistantContent.textContent = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.token) {
+                                    fullResponse += data.token;
+                                    assistantContent.textContent = fullResponse;
+                                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                                }
+                            } catch (e) {
+                                // 忽略解析错误
+                            }
+                        }
+                    }
+                }
+
+                // 将完整回复添加到消息历史
+                const assistantMessageIndex = messages.length;
+                messages.push({ role: 'assistant', content: fullResponse });
+
+                // 添加重新生成功能
+                assistantContent.setAttribute('data-message-index', assistantMessageIndex);
+                assistantContent.setAttribute('title', '点击重新生成此回复');
+                assistantContent.addEventListener('click', function() {
+                    if (!isGenerating) {
+                        regenerateMessage(assistantMessageIndex);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                assistantContent.innerHTML = `<div class="error-message">错误: ${error.message}</div>`;
+            } finally {
+                isGenerating = false;
+                sendButton.disabled = !chatInput.value.trim();
+            }
+        }
+
+        /**
+         * 重新生成助手消息
+         * @param {number} messageIndex - 要重新生成的消息索引
+         */
+        async function regenerateMessage(messageIndex) {
+            // 检查消息索引有效性
+            if (messageIndex < 0 || messageIndex >= messages.length) return;
+
+            const messageToRegenerate = messages[messageIndex];
+            if (messageToRegenerate.role !== 'assistant') return;
+
+            // 从消息数组中移除此消息及其后续所有消息
+            messages = messages.slice(0, messageIndex);
+
+            // 从DOM中移除对应的消息元素
+            const allMessages = chatWrapper.querySelectorAll('.message');
+            for (let i = messageIndex; i < allMessages.length; i++) {
+                allMessages[i].remove();
+            }
+
+            // 重新生成助手回复
+            await generateAssistantResponse();
+        }
+
+        /**
+         * 处理斜杠命令（如 /temperature, /topk 等）
+         * @param {string} command - 用户输入的命令
+         * @returns {boolean} 是否为有效命令
+         */
+        function handleSlashCommand(command) {
+            const parts = command.trim().split(/\s+/);
+            const cmd = parts[0].toLowerCase();
+            const arg = parts[1];
+
+            if (cmd === '/temperature') {
+                if (arg === undefined) {
+                    addMessage('console', `当前温度: ${currentTemperature}`);
+                } else {
+                    const temp = parseFloat(arg);
+                    if (isNaN(temp) || temp < 0 || temp > 2) {
+                        addMessage('console', '无效温度值。必须在 0.0 到 2.0 之间');
+                    } else {
+                        currentTemperature = temp;
+                        addMessage('console', `温度已设置为 ${currentTemperature}`);
+                    }
+                }
+                return true;
+            } else if (cmd === '/topk') {
+                if (arg === undefined) {
+                    addMessage('console', `当前 top-k: ${currentTopK}`);
+                } else {
+                    const topk = parseInt(arg);
+                    if (isNaN(topk) || topk < 1 || topk > 200) {
+                        addMessage('console', '无效 top-k 值。必须在 1 到 200 之间');
+                    } else {
+                        currentTopK = topk;
+                        addMessage('console', `Top-k 已设置为 ${currentTopK}`);
+                    }
+                }
+                return true;
+            } else if (cmd === '/clear') {
+                newConversation();
+                return true;
+            } else if (cmd === '/help') {
+                addMessage('console',
+                    '可用命令:\n' +
+                    '/temperature - 显示当前温度\n' +
+                    '/temperature <value> - 设置温度 (0.0-2.0)\n' +
+                    '/topk - 显示当前 top-k\n' +
+                    '/topk <value> - 设置 top-k (1-200)\n' +
+                    '/clear - 清除对话\n' +
+                    '/help - 显示此帮助信息'
+                );
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * 发送消息
+         */
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message || isGenerating) return;
+
+            // 处理斜杠命令
+            if (message.startsWith('/')) {
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+                handleSlashCommand(message);
+                return;
+            }
+
+            // 清空输入框
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            // 添加用户消息到界面和历史记录
+            const userMessageIndex = messages.length;
+            messages.push({ role: 'user', content: message });
+            addMessage('user', message, userMessageIndex);
+
+            // 生成助手回复
+            await generateAssistantResponse();
+        }
+
+        // 初始化发送按钮状态
+        sendButton.disabled = false;
+
+        // 页面加载时自动聚焦输入框
+        chatInput.focus();
+
+        // 检查后端服务是否可用
+        fetch(`${API_URL}/health`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('引擎状态:', data);
+            })
+            .catch(error => {
+                console.error('引擎不可用:', error);
+                chatWrapper.innerHTML = '<div class="error-message">引擎未运行。请先启动 engine.py。</div>';
+            });
+    </script>
+</body>
+</html>
